@@ -1,4 +1,7 @@
 import java.util.Random;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;                                                            
 
 public class Prod implements Runnable{
 	private int maxItems;
@@ -12,38 +15,43 @@ public class Prod implements Runnable{
 		this.buffSize = buffSize;
 		this.maxWait = maxWait;
 		this.maxItems = numItems;
-		cBuff = new CirBuffer();
+		this.cBuff = new CirBuffer(buffSize);
 	}		
 	
 	public void run(){
 		int total = 0;
-		while(itemCount < numItems){
-			synchonized(cBuff){
-				//Get date/time
-				DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-				Date date = new Date();
-				if(cBuff.isFull()){ //if buff is full, wait
-					System.out.println("Unable to insert,buffer full, at instant: " 
-									   + df.format(date));
-					try {	
-						bBuff.wait();
-					} 
-					catch(InterruptedException e){
+		while(itemCount < maxItems){
+			synchronized(cBuff){
+				//wait if needed
+//				System.out.println("Head: " + cBuff.getHead());
+//				System.out.println("Tail: " + cBuff.getTail());
+//				System.out.println("Is full: " + cBuff.isFull());
+				if(cBuff.isFull()){
+					try {
+						cBuff.wait(maxWait * 15);
+					}
+					catch(InterruptedException e) {
 						e.printStackTrace();
-					} 					
-				}//Buffer ain't full no mo', lets put a rand val in buff
+					}
+				}
+				//get date and time
+				DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss.SSSSS");
+				Date date = new Date();
+				//place in random number
 				Random rand = new Random();
-				int val = random.nextInt() * 100.0;
+				int val = rand.nextInt(99);
 			 	itemCount++;
 				total += val; //add to the total
 				int loc = cBuff.getTail(); // get the tail value before pushing
-				cBuff.push(value);//add the val
+				cBuff.push(val);//add the val
+				cBuff.notifyAll();	
 				//Now Print 
 				System.out.println("Producer: Placed " + val + " at Location " + loc + 
-								   " at instant: " + df.format(date)); 		
+								   " at instant: " + df.format(date)); 	
+
 			}
 		}
-		System.out.println("Producer done Producing " + numItems + " whose sum is " + total);
+		System.out.println("Producer done Producing " + itemCount + " whose sum is " + total);
 	}
 	
 	public CirBuffer getBuffer(){

@@ -16,7 +16,7 @@ public class CirBuffer{
 	
 	public boolean isFull(){
 		//if tail is right behind head
-		if((tail == bufferSize && head == 0) || (tail + 1 == head))
+		if((tail == bufferSize - 1 && head == 0) || (tail + 1 == head))
 			return true;
 		return false;
 	}	
@@ -43,7 +43,7 @@ public class CirBuffer{
 		if(head == bufferSize){
 			head = 0;
 		}
-		return head;
+		return value;
 	}
 	
 	//GETTERS
